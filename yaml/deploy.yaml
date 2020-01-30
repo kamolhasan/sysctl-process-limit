@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: sysctl-printer
+  namespace: m3db
+  labels:
+    k8s-app: sysctl
+spec:
+  selector:
+    matchLabels:
+      name: sysctl
+  template:
+    metadata:
+      labels:
+        name: sysctl
+    spec:
+      terminationGracePeriodSeconds: 5
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: doks.digitalocean.com/node-pool
+                    operator: In
+                    values:
+                      - m3db
+      tolerations:
+        - key: "m3db"
+          operator: "Equal"
+          value: "db-node"
+          effect: "NoSchedule"
+      containers:
+        - image: kamolhasan/sysctl-process-limit:latest
+          imagePullPolicy: Always
+          name: sysctl-printer
+          securityContext:
+            privileged: true
+
